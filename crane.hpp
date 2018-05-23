@@ -15,10 +15,13 @@ class CCrane
 		unsigned m_width;
 		unsigned m_height;
 		const std::string IMGPATH_CRANE;
+		const std::string IMGPATH_HOOK;
 				
 		sf::RenderWindow m_window;
 		sf::Texture m_craneTexture;
+		sf::Texture m_hookTexture;
 		sf::Sprite m_craneSprite;
+		sf::Sprite m_hookSprite;
 		
 		void processEvents();
 		void refresh();	

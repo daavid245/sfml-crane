@@ -25,6 +25,7 @@ class CCrane
 		
 		void processEvents();
 		void refresh();	
+		void update();
 		bool getSprites();
 };
 

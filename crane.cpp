@@ -6,6 +6,7 @@ CCrane::CCrane(const unsigned width, const unsigned height, const std::string ti
 	m_height = height;
 	
 	m_window.create(sf::VideoMode(m_width, m_height), title, sf::Style::Close);
+	m_window.setFramerateLimit(120);
 	
 	if (!getSprites())
 	{
@@ -18,10 +19,9 @@ void CCrane::run()
 {
 	while (m_window.isOpen())
 	{
-		processEvents();
-		m_window.clear(sf::Color(255, 255, 255));
+		processEvents();	
+		update();
 		refresh();
-		m_window.display();
 	}
 }
 
@@ -41,8 +41,23 @@ void CCrane::processEvents()
 
 void CCrane::refresh()
 {
+	m_window.clear(sf::Color(255, 255, 255));
 	m_window.draw(m_craneSprite);
 	m_window.draw(m_hookSprite);
+	m_window.display();
+}
+
+void CCrane::update()
+{
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) && m_hookSprite.getPosition().x > m_craneSprite.getPosition().x + 10)
+	{
+		m_hookSprite.move(-1, 0);
+	}
+	
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && m_hookSprite.getPosition().x < m_craneSprite.getPosition().x + 350)
+	{
+		m_hookSprite.move(1, 0);
+	}
 }
 
 bool CCrane::getSprites()
@@ -60,7 +75,7 @@ bool CCrane::getSprites()
 		return false;
 	}
 	
-	m_hookSprite.setPosition(m_craneSprite.getPosition().x + 10, m_craneSprite.getPosition().y + 145);
+	m_hookSprite.setPosition(m_craneSprite.getPosition().x + 10, m_craneSprite.getPosition().y + 147);
 	m_hookSprite.setTexture(m_hookTexture);
 	
 	return true;

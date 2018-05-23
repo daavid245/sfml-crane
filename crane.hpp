@@ -3,6 +3,7 @@
 
 #define SFML_STATIC
 #include <SFML/Graphics.hpp>
+#include <iostream>
 
 class CCrane
 {
@@ -13,10 +14,15 @@ class CCrane
 	private:
 		unsigned m_width;
 		unsigned m_height;
+		const std::string IMGPATH_CRANE;
+				
 		sf::RenderWindow m_window;
+		sf::Texture m_craneTexture;
+		sf::Sprite m_craneSprite;
 		
 		void processEvents();
 		void refresh();	
+		bool getSprites();
 };
 
 #endif // CRANE_HPP

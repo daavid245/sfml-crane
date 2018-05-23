@@ -1,11 +1,17 @@
 #include "crane.hpp"
 
-CCrane::CCrane(const unsigned width, const unsigned height, const std::string title)
+CCrane::CCrane(const unsigned width, const unsigned height, const std::string title) : IMGPATH_CRANE("assets/crane.png")
 {
 	m_width = width;
 	m_height = height;
 	
 	m_window.create(sf::VideoMode(m_width, m_height), title, sf::Style::Close);
+	
+	if (!getSprites())
+	{
+		std::cout << "Nie mozna wczytac obrazow\n";
+		m_window.close();
+	}
 }
 
 void CCrane::run()
@@ -35,5 +41,18 @@ void CCrane::processEvents()
 
 void CCrane::refresh()
 {
-	// todo
+	m_window.draw(m_craneSprite);
+}
+
+bool CCrane::getSprites()
+{
+	if (!m_craneTexture.loadFromFile(IMGPATH_CRANE))
+	{
+		return false;
+	}
+	
+	m_craneSprite.setPosition(m_width - m_craneTexture.getSize().x - 50, 50);
+	m_craneSprite.setTexture(m_craneTexture);
+	
+	return true;
 }

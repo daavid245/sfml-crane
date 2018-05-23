@@ -15,18 +15,22 @@ class CCrane
 		unsigned m_width;
 		unsigned m_height;
 		const std::string IMGPATH_CRANE;
+		const std::string IMGPATH_HOOKCONTROL;
 		const std::string IMGPATH_HOOK;
 				
 		sf::RenderWindow m_window;
 		sf::Texture m_craneTexture;
+		sf::Texture m_hookControlTexture;
 		sf::Texture m_hookTexture;
 		sf::Sprite m_craneSprite;
+		sf::Sprite m_hookControlSprite;
 		sf::Sprite m_hookSprite;
+		sf::RectangleShape m_hookRope;
 		
 		void processEvents();
 		void refresh();	
 		void update();
-		bool getSprites();
+		bool loadSprites();
 };
 
 #endif // CRANE_HPP

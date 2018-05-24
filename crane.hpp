@@ -6,12 +6,13 @@
 #include <iostream>
 #include <vector>
 
-enum Direction
+enum Key
 {
 	LEFT,
 	UP,
 	RIGHT,
-	DOWN	
+	DOWN,
+	SPACE
 };
 
 class CCrane
@@ -26,7 +27,8 @@ class CCrane
 		const std::string IMGPATH_CRANE;
 		const std::string IMGPATH_HOOKCONTROL;
 		const std::string IMGPATH_HOOK;
-		const std::string IMGPATH_ARROWS;
+		const std::string IMGPATH_KEYS;
+		unsigned m_highlightAlpha;
 				
 		sf::RenderWindow m_window;
 		
@@ -34,13 +36,13 @@ class CCrane
 		sf::Texture m_craneTexture;
 		sf::Texture m_hookControlTexture;
 		sf::Texture m_hookTexture;
-		sf::Texture m_arrowsTexture;
+		sf::Texture m_keysTexture;
 		
 		// sprites 
 		sf::Sprite m_craneSprite;
 		sf::Sprite m_hookControlSprite;
 		sf::Sprite m_hookSprite;
-		std::vector<sf::Sprite> m_arrowSprites;
+		std::vector<sf::Sprite> m_keySprites;
 		
 		// other
 		sf::RectangleShape m_hookRope;

@@ -2,10 +2,11 @@
 
 CCrane::CCrane(const unsigned width, const unsigned height, const std::string title)
 : IMGPATH_CRANE("assets/crane.png"), IMGPATH_HOOKCONTROL("assets/hookcontrol.png"), IMGPATH_HOOK("assets/hook.png"), 
-  IMGPATH_ARROWS("assets/arrows.png")
+  IMGPATH_KEYS("assets/arrows.png")
 {
 	m_width = width;
 	m_height = height;
+	m_highlightAlpha = 150;
 	
 	sf::ContextSettings settings;
 	settings.antialiasingLevel = 8;
@@ -50,9 +51,9 @@ void CCrane::refresh()
 {
 	m_window.clear(sf::Color(255, 255, 255));
 	
-	for (int i = 0; i < m_arrowSprites.size(); i++)
+	for (int i = 0; i < m_keySprites.size(); i++)
 	{
-		m_window.draw(m_arrowSprites[i]);
+		m_window.draw(m_keySprites[i]);
 	}	
 	
 	m_window.draw(m_craneSprite);
@@ -65,11 +66,11 @@ void CCrane::refresh()
 
 void CCrane::update()
 {
-	for (int i = 0; i < m_arrowSprites.size(); i++)
+	for (int i = 0; i < m_keySprites.size(); i++)
 	{
-		if (m_arrowSprites[i].getColor().a == 100)
+		if (m_keySprites[i].getColor().a == m_highlightAlpha)
 		{
-			m_arrowSprites[i].setColor(sf::Color(255, 255, 255, 255));
+			m_keySprites[i].setColor(sf::Color(255, 255, 255, 255));
 		}
 	}
 		
@@ -81,7 +82,7 @@ void CCrane::update()
 			m_hookSprite.move(-1, 0);
 		}
 		
-		m_arrowSprites[Direction::LEFT].setColor(sf::Color(255, 255, 255, 100));		
+		m_keySprites[Key::LEFT].setColor(sf::Color(255, 255, 255, m_highlightAlpha));		
 	}
 	
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
@@ -92,7 +93,7 @@ void CCrane::update()
 			m_hookSprite.move(1, 0);
 		}
 		
-		m_arrowSprites[Direction::RIGHT].setColor(sf::Color(255, 255, 255, 100));
+		m_keySprites[Key::RIGHT].setColor(sf::Color(255, 255, 255, m_highlightAlpha));
 	}
 	
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
@@ -102,7 +103,7 @@ void CCrane::update()
 			m_hookSprite.move(0, -1);
 		}
 		
-		m_arrowSprites[Direction::UP].setColor(sf::Color(255, 255, 255, 100));
+		m_keySprites[Key::UP].setColor(sf::Color(255, 255, 255, m_highlightAlpha));
 	}
 	
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
@@ -112,7 +113,12 @@ void CCrane::update()
 			m_hookSprite.move(0, 1);
 		}
 		
-		m_arrowSprites[Direction::DOWN].setColor(sf::Color(255, 255, 255, 100));
+		m_keySprites[Key::DOWN].setColor(sf::Color(255, 255, 255, m_highlightAlpha));
+	}
+	
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+	{
+		m_keySprites[Key::SPACE].setColor(sf::Color(255, 255, 255, m_highlightAlpha));
 	}
 	
 	m_hookRope.setPosition(sf::Vector2f(m_hookSprite.getPosition().x + 3, m_hookControlSprite.getPosition().y + m_hookControlTexture.getSize().y));
@@ -122,7 +128,7 @@ void CCrane::update()
 bool CCrane::loadSprites()
 {
 	if (!m_craneTexture.loadFromFile(IMGPATH_CRANE) || !m_hookControlTexture.loadFromFile(IMGPATH_HOOKCONTROL) || !m_hookTexture.loadFromFile(IMGPATH_HOOK)
-		|| !m_arrowsTexture.loadFromFile(IMGPATH_ARROWS))
+		|| !m_keysTexture.loadFromFile(IMGPATH_KEYS))
 	{
 		return false;
 	}
@@ -139,15 +145,21 @@ bool CCrane::loadSprites()
 	for (int i = 0; i < 4; i++)
 	{
 		sf::Sprite sprite;
-		sprite.setTexture(m_arrowsTexture);
+		sprite.setTexture(m_keysTexture);
 		sprite.setTextureRect(sf::IntRect(i*62, 0, 62, 62));
-		m_arrowSprites.push_back(sprite);
+		m_keySprites.push_back(sprite);
 	}
 	
-	m_arrowSprites[Direction::LEFT].setPosition(10, m_height - 72);
-	m_arrowSprites[Direction::UP].setPosition(77, m_height - 139);
-	m_arrowSprites[Direction::RIGHT].setPosition(144, m_height - 72);
-	m_arrowSprites[Direction::DOWN].setPosition(77, m_height - 72);
+	sf::Sprite sprite;
+	sprite.setTexture(m_keysTexture);
+	sprite.setTextureRect(sf::IntRect(248, 0, 332, 62));
+	m_keySprites.push_back(sprite);
+	
+	m_keySprites[Key::LEFT].setPosition(10, m_height - 72);
+	m_keySprites[Key::UP].setPosition(77, m_height - 139);
+	m_keySprites[Key::RIGHT].setPosition(144, m_height - 72);
+	m_keySprites[Key::DOWN].setPosition(77, m_height - 72);
+	m_keySprites[Key::SPACE].setPosition(221, m_height - 72);
 	
 	return true;
 }

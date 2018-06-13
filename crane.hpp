@@ -19,6 +19,7 @@ struct Block
 {
 	sf::RectangleShape shape;
 	double mass;
+	bool isSuspended;
 	
 	bool collidesWith(const sf::FloatRect& entity)
 	{

@@ -19,6 +19,8 @@ CCrane::CCrane(const unsigned width, const unsigned height, const std::string ti
 		std::cout << "Nie mozna wczytac obrazow\n";
 		m_window.close();
 	}	
+	
+	setupSprites();
 }
 
 void CCrane::run()
@@ -115,42 +117,62 @@ void CCrane::update()
 		
 		m_keySprites[Key::DOWN].setColor(sf::Color(255, 255, 255, m_highlightAlpha));
 	}
+
+	sf::FloatRect ropeRect = m_hookRope.getGlobalBounds();
+	sf::FloatRect hookRect = m_hookSprite.getGlobalBounds();
+	ropeRect.left += deltaX;
+	ropeRect.top += deltaY;
 	
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
-	{
+	{	
+		while (sf::Keyboard::isKeyPressed(sf::Keyboard::Space));
+		
+		if (m_block.isSuspended)
+		{
+			m_block.isSuspended = false;
+		}
+		else if (m_block.collidesWith(hookRect))
+		{
+			m_block.isSuspended = true;
+		}
+		
 		m_keySprites[Key::SPACE].setColor(sf::Color(255, 255, 255, m_highlightAlpha));
 	}
 	
-	sf::FloatRect rect = m_hookSprite.getGlobalBounds();
-	rect.left += deltaX;
-	rect.top += deltaY;
+	hookRect.left += deltaX;
+	hookRect.top += deltaY;
 	
-	if (deltaX != 0 && !m_block.collidesWith(rect))
+	if (deltaX != 0 && (!(m_block.collidesWith(hookRect) || m_block.collidesWith(ropeRect)) || m_block.isSuspended))
 	{
 		m_hookControlSprite.move(deltaX, 0);
 		m_hookSprite.move(deltaX, 0);
 		m_hookRope.move(deltaX, 0);
+		
+		if (m_block.isSuspended)
+		{
+			m_block.shape.move(deltaX, 0);
+		}
 	}
 	
-	if (deltaY != 0 && !m_block.collidesWith(rect))
+	if (deltaY != 0 && (!m_block.collidesWith(ropeRect) || m_block.isSuspended))
 	{
 		m_hookSprite.move(0, deltaY);
 		m_hookRope.setSize(sf::Vector2f(2.0, m_hookSprite.getPosition().y - m_hookControlSprite.getPosition().y - m_hookControlTexture.getSize().y));
+		
+		if (m_block.isSuspended)
+		{
+			m_block.shape.move(0, deltaY);
+		}
 	}
 }
 
 bool CCrane::loadSprites()
 {
-	if (!m_craneTexture.loadFromFile(IMGPATH_CRANE) || !m_hookControlTexture.loadFromFile(IMGPATH_HOOKCONTROL) || !m_hookTexture.loadFromFile(IMGPATH_HOOK)
-		|| !m_keysTexture.loadFromFile(IMGPATH_KEYS))
-	{
-		return false;
-	}
-		
-	return true;
+	return (m_craneTexture.loadFromFile(IMGPATH_CRANE) && m_hookControlTexture.loadFromFile(IMGPATH_HOOKCONTROL) && m_hookTexture.loadFromFile(IMGPATH_HOOK)
+		&& m_keysTexture.loadFromFile(IMGPATH_KEYS));
 }
 
-void CCrane::setupSrites()
+void CCrane::setupSprites()
 {
 	m_craneSprite.setPosition(m_width - m_craneTexture.getSize().x - 50, 50);
 	m_craneSprite.setTexture(m_craneTexture);
@@ -187,6 +209,8 @@ void CCrane::setupSrites()
 	m_keySprites[Key::SPACE].setPosition(221, m_height - 72);
 	
 	m_block.shape.setSize(sf::Vector2f(50,50));
-	m_block.shape.setPosition(700,m_height - 10 - m_block.shape.getSize().y);
+	m_block.shape.setPosition(700, m_height - 10 - m_block.shape.getSize().y);
 	m_block.shape.setFillColor(sf::Color::Black);
+	m_block.mass = 50.0;
+	m_block.isSuspended = false;
 }

@@ -64,6 +64,7 @@ class CCrane
 		void refresh();	
 		void update();
 		bool loadSprites();
+		void setupSprites();
 };
 
 #endif // CRANE_HPP

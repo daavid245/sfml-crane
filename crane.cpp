@@ -18,9 +18,7 @@ CCrane::CCrane(const unsigned width, const unsigned height, const std::string ti
 	{
 		std::cout << "Nie mozna wczytac obrazow\n";
 		m_window.close();
-	}
-	
-	
+	}	
 }
 
 void CCrane::run()
@@ -81,11 +79,7 @@ void CCrane::update()
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
 	{
 		if (m_hookControlSprite.getPosition().x > m_craneSprite.getPosition().x + 10)
-		{
-			/*m_hookControlSprite.move(-1, 0);
-			m_hookSprite.move(-1, 0);
-			m_hookRope.move(-1, 0);*/
-			
+		{			
 			deltaX -= 1;
 		}
 		
@@ -95,11 +89,7 @@ void CCrane::update()
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
 	{
 		if (m_hookControlSprite.getPosition().x < m_craneSprite.getPosition().x + 350)
-		{
-			/*m_hookControlSprite.move(1, 0);
-			m_hookSprite.move(1, 0);
-			m_hookRope.move(1, 0);*/
-			
+		{			
 			deltaX += 1;
 		}
 		
@@ -109,10 +99,7 @@ void CCrane::update()
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
 	{
 		if (m_hookSprite.getPosition().y > m_hookControlSprite.getPosition().y + m_hookControlTexture.getSize().y)
-		{
-			/*m_hookSprite.move(0, -1);
-			m_hookRope.setSize(sf::Vector2f(2.0, m_hookSprite.getPosition().y - m_hookControlSprite.getPosition().y - m_hookControlTexture.getSize().y));*/
-			
+		{			
 			deltaY -= 1;
 		}
 		
@@ -122,10 +109,7 @@ void CCrane::update()
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
 	{
 		if (m_hookSprite.getPosition().y < m_height - 60)
-		{
-			/*m_hookSprite.move(0, 1);
-			m_hookRope.setSize(sf::Vector2f(2.0, m_hookSprite.getPosition().y - m_hookControlSprite.getPosition().y - m_hookControlTexture.getSize().y));*/
-			
+		{		
 			deltaY += 1;
 		}
 		
@@ -162,7 +146,12 @@ bool CCrane::loadSprites()
 	{
 		return false;
 	}
-	
+		
+	return true;
+}
+
+void CCrane::setupSrites()
+{
 	m_craneSprite.setPosition(m_width - m_craneTexture.getSize().x - 50, 50);
 	m_craneSprite.setTexture(m_craneTexture);
 	
@@ -200,6 +189,4 @@ bool CCrane::loadSprites()
 	m_block.shape.setSize(sf::Vector2f(50,50));
 	m_block.shape.setPosition(700,m_height - 10 - m_block.shape.getSize().y);
 	m_block.shape.setFillColor(sf::Color::Black);
-	
-	return true;
 }

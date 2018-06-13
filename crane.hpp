@@ -18,7 +18,13 @@ enum Key
 struct Block
 {
 	sf::RectangleShape shape;
-	double mass;	
+	double mass;
+	
+	bool collidesWith(const sf::FloatRect& entity)
+	{
+		sf::FloatRect rect = shape.getGlobalBounds();
+		return rect.intersects(entity);
+	}
 };
 
 class CCrane

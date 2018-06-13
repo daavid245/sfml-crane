@@ -49,7 +49,7 @@ void CCrane::processEvents()
 
 void CCrane::refresh()
 {
-	m_window.clear(sf::Color(255, 255, 255));
+	m_window.clear(sf::Color::White);
 	
 	for (int i = 0; i < m_keySprites.size(); i++)
 	{
@@ -70,7 +70,7 @@ void CCrane::update()
 	{
 		if (m_keySprites[i].getColor().a == m_highlightAlpha)
 		{
-			m_keySprites[i].setColor(sf::Color(255, 255, 255, 255));
+			m_keySprites[i].setColor(sf::Color::White);
 		}
 	}
 		
@@ -80,6 +80,7 @@ void CCrane::update()
 		{
 			m_hookControlSprite.move(-1, 0);
 			m_hookSprite.move(-1, 0);
+			m_hookRope.move(-1, 0);
 		}
 		
 		m_keySprites[Key::LEFT].setColor(sf::Color(255, 255, 255, m_highlightAlpha));		
@@ -91,6 +92,7 @@ void CCrane::update()
 		{
 			m_hookControlSprite.move(1, 0);
 			m_hookSprite.move(1, 0);
+			m_hookRope.move(1, 0);
 		}
 		
 		m_keySprites[Key::RIGHT].setColor(sf::Color(255, 255, 255, m_highlightAlpha));
@@ -101,6 +103,7 @@ void CCrane::update()
 		if (m_hookSprite.getPosition().y > m_hookControlSprite.getPosition().y + m_hookControlTexture.getSize().y)
 		{
 			m_hookSprite.move(0, -1);
+			m_hookRope.setSize(sf::Vector2f(2.0, m_hookSprite.getPosition().y - m_hookControlSprite.getPosition().y - m_hookControlTexture.getSize().y));
 		}
 		
 		m_keySprites[Key::UP].setColor(sf::Color(255, 255, 255, m_highlightAlpha));
@@ -111,6 +114,7 @@ void CCrane::update()
 		if (m_hookSprite.getPosition().y < m_height - 60)
 		{
 			m_hookSprite.move(0, 1);
+			m_hookRope.setSize(sf::Vector2f(2.0, m_hookSprite.getPosition().y - m_hookControlSprite.getPosition().y - m_hookControlTexture.getSize().y));
 		}
 		
 		m_keySprites[Key::DOWN].setColor(sf::Color(255, 255, 255, m_highlightAlpha));
@@ -121,8 +125,6 @@ void CCrane::update()
 		m_keySprites[Key::SPACE].setColor(sf::Color(255, 255, 255, m_highlightAlpha));
 	}
 	
-	m_hookRope.setPosition(sf::Vector2f(m_hookSprite.getPosition().x + 3, m_hookControlSprite.getPosition().y + m_hookControlTexture.getSize().y));
-	m_hookRope.setSize(sf::Vector2f(2.0, m_hookSprite.getPosition().y - m_hookControlSprite.getPosition().y - m_hookControlTexture.getSize().y));
 }
 
 bool CCrane::loadSprites()
@@ -142,18 +144,23 @@ bool CCrane::loadSprites()
 	m_hookSprite.setPosition(m_hookControlSprite.getPosition().x + 10, m_craneSprite.getPosition().y + 177);
 	m_hookSprite.setTexture(m_hookTexture);
 	
-	for (int i = 0; i < 4; i++)
+	m_hookRope.setPosition(m_hookControlSprite.getPosition().x + m_hookControlTexture.getSize().x/2 - 1, m_hookControlSprite.getPosition().y + m_hookControlTexture.getSize().y);
+	
+	for (int i = 0; i < 5; i++)
 	{
 		sf::Sprite sprite;
 		sprite.setTexture(m_keysTexture);
-		sprite.setTextureRect(sf::IntRect(i*62, 0, 62, 62));
+		if(i == 4)
+		{
+			sprite.setTextureRect(sf::IntRect(248, 0, 332, 62));
+		}
+		else
+		{
+			sprite.setTextureRect(sf::IntRect(i*62, 0, 62, 62));
+		}
+
 		m_keySprites.push_back(sprite);
 	}
-	
-	sf::Sprite sprite;
-	sprite.setTexture(m_keysTexture);
-	sprite.setTextureRect(sf::IntRect(248, 0, 332, 62));
-	m_keySprites.push_back(sprite);
 	
 	m_keySprites[Key::LEFT].setPosition(10, m_height - 72);
 	m_keySprites[Key::UP].setPosition(77, m_height - 139);

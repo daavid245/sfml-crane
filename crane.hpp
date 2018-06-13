@@ -15,6 +15,12 @@ enum Key
 	SPACE
 };
 
+struct Block
+{
+	sf::RectangleShape shape;
+	double mass;	
+};
+
 class CCrane
 {
 	public:
@@ -46,6 +52,7 @@ class CCrane
 		
 		// other
 		sf::RectangleShape m_hookRope;
+		Block m_block;
 		
 		void processEvents();
 		void refresh();	

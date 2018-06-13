@@ -20,7 +20,7 @@ CCrane::CCrane(const unsigned width, const unsigned height, const std::string ti
 		m_window.close();
 	}
 	
-	m_hookRope.setFillColor(sf::Color::Black);
+	
 }
 
 void CCrane::run()
@@ -60,6 +60,7 @@ void CCrane::refresh()
 	m_window.draw(m_hookControlSprite);
 	m_window.draw(m_hookSprite);
 	m_window.draw(m_hookRope);
+	m_window.draw(m_block.shape);
 	
 	m_window.display();
 }
@@ -145,6 +146,7 @@ bool CCrane::loadSprites()
 	m_hookSprite.setTexture(m_hookTexture);
 	
 	m_hookRope.setPosition(m_hookControlSprite.getPosition().x + m_hookControlTexture.getSize().x/2 - 1, m_hookControlSprite.getPosition().y + m_hookControlTexture.getSize().y);
+	m_hookRope.setFillColor(sf::Color::Black);
 	
 	for (int i = 0; i < 5; i++)
 	{
@@ -167,6 +169,10 @@ bool CCrane::loadSprites()
 	m_keySprites[Key::RIGHT].setPosition(144, m_height - 72);
 	m_keySprites[Key::DOWN].setPosition(77, m_height - 72);
 	m_keySprites[Key::SPACE].setPosition(221, m_height - 72);
+	
+	m_block.shape.setSize(sf::Vector2f(50,50));
+	m_block.shape.setPosition(700,m_height - 10 - m_block.shape.getSize().y);
+	m_block.shape.setFillColor(sf::Color::Black);
 	
 	return true;
 }

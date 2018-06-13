@@ -6,6 +6,7 @@ CCrane::CCrane(const unsigned width, const unsigned height, const std::string ti
 {
 	m_width = width;
 	m_height = height;
+	m_groundLevel = m_height - 10;
 	m_highlightAlpha = 150;
 	
 	sf::ContextSettings settings;
@@ -110,7 +111,7 @@ void CCrane::update()
 	
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
 	{
-		if (m_hookSprite.getPosition().y < m_height - 60)
+		if ((!m_block.isSuspended && m_hookSprite.getPosition().y < m_groundLevel) || (m_block.isSuspended && (m_block.shape.getPosition().y + m_block.shape.getSize().y) < m_groundLevel))
 		{		
 			deltaY += 1;
 		}
@@ -164,6 +165,16 @@ void CCrane::update()
 			m_block.shape.move(0, deltaY);
 		}
 	}
+	
+	if(!m_block.isSuspended && (m_block.shape.getPosition().y + m_block.shape.getSize().y + m_block.velocity) < m_groundLevel)
+	{
+		m_block.velocity += m_block.acceleration/120.0;
+		m_block.shape.move(0, m_block.velocity);		
+	}
+	else
+	{
+		m_block.velocity = 0;
+	}
 }
 
 bool CCrane::loadSprites()
@@ -174,7 +185,7 @@ bool CCrane::loadSprites()
 
 void CCrane::setupSprites()
 {
-	m_craneSprite.setPosition(m_width - m_craneTexture.getSize().x - 50, 50);
+	m_craneSprite.setPosition(m_width - m_craneTexture.getSize().x - 50, m_groundLevel - m_craneTexture.getSize().y);
 	m_craneSprite.setTexture(m_craneTexture);
 	
 	m_hookControlSprite.setPosition(m_craneSprite.getPosition().x + 10, m_craneSprite.getPosition().y + 147);
@@ -209,8 +220,10 @@ void CCrane::setupSprites()
 	m_keySprites[Key::SPACE].setPosition(221, m_height - 72);
 	
 	m_block.shape.setSize(sf::Vector2f(50,50));
-	m_block.shape.setPosition(700, m_height - 10 - m_block.shape.getSize().y);
+	m_block.shape.setPosition(700, m_groundLevel - m_block.shape.getSize().y);
 	m_block.shape.setFillColor(sf::Color::Black);
 	m_block.mass = 50.0;
+	m_block.acceleration = 9.81;
+	m_block.velocity = 0;
 	m_block.isSuspended = false;
 }

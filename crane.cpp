@@ -35,189 +35,6 @@ void CCrane::run()
 	}
 }
 
-void CCrane::processEvents()
-{
-	sf::Event event;
-	while (m_window.pollEvent(event))
-	{
-		switch (event.type)
-		{
-			case sf::Event::Closed:
-				m_window.close();
-				break;
-				
-			case sf::Event::TextEntered:
-				if (event.text.unicode >= 48 && event.text.unicode <= 57 && m_userInput.getSize() < 6) // cyfry od 0 do 9
-				{
-					if ((event.text.unicode == 48 && m_userInput.getSize() > 0) || event.text.unicode != 48)
-					{
-						m_userInput += event.text.unicode;					
-						m_block.mass = std::stoi(std::string(m_userInput), nullptr);
-					}				
-				}
-				else if (event.text.unicode == 8 && m_userInput.getSize() > 0) // backspace
-				{
-					m_userInput.erase(m_userInput.getSize() - 1, 1);
-					
-					try
-					{
-						m_block.mass = std::stoi(std::string(m_userInput), nullptr);
-					}
-					catch (...)
-					{
-						m_block.mass = 0;
-					}
-				}
-				
-				m_craneCapacityText.setString(m_userInput);			
-				break;
-		}
-	}
-}
-
-void CCrane::refresh()
-{
-	m_window.clear(sf::Color::White);
-	
-	for (int i = 0; i < m_keySprites.size(); i++)
-	{
-		m_window.draw(m_keySprites[i]);
-	}	
-	
-	m_window.draw(m_craneSprite);
-	m_window.draw(m_hookControlSprite);
-	m_window.draw(m_hookSprite);
-	m_window.draw(m_hookRope);
-	m_window.draw(m_block.shape);
-	m_window.draw(m_craneCapacityLabel);
-	m_window.draw(m_craneCapacityText);
-	m_window.draw(m_craneCapacityExceeded);
-	m_window.draw(m_craneCapacityBorder);
-	
-	m_window.display();
-}
-
-void CCrane::update()
-{
-	for (int i = 0; i < m_keySprites.size(); i++) // wylaczenie przezroczystosci przyciskow
-	{
-		if (m_keySprites[i].getColor().a == m_highlightAlpha)
-		{
-			m_keySprites[i].setColor(sf::Color::White);
-		}
-	}
-	
-	int deltaX = 0;
-	int deltaY = 0;
-	
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
-	{
-		if (m_hookControlSprite.getPosition().x > m_craneSprite.getPosition().x + 10)
-		{			
-			deltaX -= 1;
-		}
-		
-		m_keySprites[Key::LEFT].setColor(sf::Color(255, 255, 255, m_highlightAlpha));		
-	}
-	
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
-	{
-		if (m_hookControlSprite.getPosition().x < m_craneSprite.getPosition().x + 350)
-		{			
-			deltaX += 1;
-		}
-		
-		m_keySprites[Key::RIGHT].setColor(sf::Color(255, 255, 255, m_highlightAlpha));
-	}
-	
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
-	{
-		if (m_hookSprite.getPosition().y > m_hookControlSprite.getPosition().y + m_hookControlTexture.getSize().y)
-		{			
-			deltaY -= 1;
-		}
-		
-		m_keySprites[Key::UP].setColor(sf::Color(255, 255, 255, m_highlightAlpha));
-	}
-	
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
-	{
-		if ((!m_block.isSuspended && m_hookSprite.getPosition().y < m_groundLevel) || (m_block.isSuspended && (m_block.shape.getPosition().y + m_block.shape.getSize().y) < m_groundLevel))
-		{		
-			deltaY += 1;
-		}
-		
-		m_keySprites[Key::DOWN].setColor(sf::Color(255, 255, 255, m_highlightAlpha));
-	}
-
-	sf::FloatRect ropeRect = m_hookRope.getGlobalBounds();
-	sf::FloatRect hookRect = m_hookSprite.getGlobalBounds();
-	ropeRect.left += deltaX;
-	ropeRect.top += deltaY;
-	
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
-	{	
-		while (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)); // wykrycie spacji jednorazowo
-		
-		if (m_block.isSuspended)
-		{
-			m_block.isSuspended = false;
-		}
-		else if (m_block.collidesWith(hookRect))
-		{
-			m_block.isSuspended = true;
-		}
-		
-		m_keySprites[Key::SPACE].setColor(sf::Color(255, 255, 255, m_highlightAlpha));
-	}
-	
-	if (m_block.mass > m_craneCapacity)
-	{
-		m_craneCapacityExceeded.setFillColor(sf::Color::Red);
-		m_block.isSuspended = false;
-	}
-	else
-	{
-		m_craneCapacityExceeded.setFillColor(sf::Color::White);
-	}
-	
-	hookRect.left += deltaX;
-	hookRect.top += deltaY;
-	
-	if (deltaX != 0 && (!(m_block.collidesWith(hookRect) || m_block.collidesWith(ropeRect)) || m_block.isSuspended))
-	{
-		m_hookControlSprite.move(deltaX, 0);
-		m_hookSprite.move(deltaX, 0);
-		m_hookRope.move(deltaX, 0);
-		
-		if (m_block.isSuspended)
-		{
-			m_block.shape.move(deltaX, 0);
-		}
-	}
-	
-	if (deltaY != 0 && (!m_block.collidesWith(ropeRect) || m_block.isSuspended))
-	{
-		m_hookSprite.move(0, deltaY);
-		m_hookRope.setSize(sf::Vector2f(2.0, m_hookSprite.getPosition().y - m_hookControlSprite.getPosition().y - m_hookControlTexture.getSize().y));
-		
-		if (m_block.isSuspended)
-		{
-			m_block.shape.move(0, deltaY);
-		}
-	}
-	
-	if (!m_block.isSuspended && (m_block.shape.getPosition().y + m_block.shape.getSize().y + m_block.velocity) < m_groundLevel)
-	{
-		m_block.velocity += m_block.acceleration/120.0;
-		m_block.shape.move(0, m_block.velocity);		
-	}
-	else
-	{
-		m_block.velocity = 0;
-	}
-}
-
 bool CCrane::loadAssets()
 {
 	return (m_craneTexture.loadFromFile(IMGPATH_CRANE) && m_hookControlTexture.loadFromFile(IMGPATH_HOOKCONTROL) && m_hookTexture.loadFromFile(IMGPATH_HOOK)
@@ -269,23 +86,227 @@ void CCrane::setup()
 	m_block.velocity = 0;
 	m_block.isSuspended = false;
 	
-	m_craneCapacityLabel.setFont(m_font);
-	m_craneCapacityLabel.setFillColor(sf::Color::Black);
-	m_craneCapacityLabel.setPosition(sf::Vector2f(10, 10));
-	m_craneCapacityLabel.setString("Waga bloczka (wpisz z klawiatury)");
+	m_blockMassLabel.setFont(m_font);
+	m_blockMassLabel.setFillColor(sf::Color::Black);
+	m_blockMassLabel.setPosition(sf::Vector2f(10, 10));
+	m_blockMassLabel.setString("Waga bloczka (wpisz z klawiatury)");
 	
-	m_craneCapacityText.setFont(m_font);
-	m_craneCapacityText.setFillColor(sf::Color::Black);
-	m_craneCapacityText.setPosition(sf::Vector2f(16, 51));
+	m_blockMassText.setFont(m_font);
+	m_blockMassText.setFillColor(sf::Color::Black);
+	m_blockMassText.setPosition(sf::Vector2f(16, 51));
 	
 	m_craneCapacityExceeded.setFont(m_font);
 	m_craneCapacityExceeded.setCharacterSize(22);
 	m_craneCapacityExceeded.setPosition(sf::Vector2f(10, 541));
 	m_craneCapacityExceeded.setString("Uwaga! Blok przekracza dopuszczalna mase udzwigu (500).");
 	
-	m_craneCapacityBorder.setFillColor(sf::Color(255, 255, 255, 0));
-	m_craneCapacityBorder.setOutlineThickness(2);
-	m_craneCapacityBorder.setOutlineColor(sf::Color::Black);
-	m_craneCapacityBorder.setSize(sf::Vector2f(250, 40));
-	m_craneCapacityBorder.setPosition(sf::Vector2f(15, 50));
+	m_blockMassBorder.setFillColor(sf::Color(255, 255, 255, 0));
+	m_blockMassBorder.setOutlineThickness(2);
+	m_blockMassBorder.setOutlineColor(sf::Color::Black);
+	m_blockMassBorder.setSize(sf::Vector2f(250, 40));
+	m_blockMassBorder.setPosition(sf::Vector2f(15, 50));
+}
+
+void CCrane::processEvents()
+{
+	sf::Event event;
+	while (m_window.pollEvent(event))
+	{
+		switch (event.type)
+		{
+			case sf::Event::Closed:
+				m_window.close();
+				break;
+				
+			case sf::Event::TextEntered:
+				if (event.text.unicode >= 48 && event.text.unicode <= 57 && m_userInput.getSize() < 6) // cyfry od 0 do 9
+				{
+					if ((event.text.unicode == 48 && m_userInput.getSize() > 0) || event.text.unicode != 48)
+					{
+						m_userInput += event.text.unicode;					
+						m_block.mass = std::stoi(std::string(m_userInput), nullptr);
+					}				
+				}
+				else if (event.text.unicode == 8 && m_userInput.getSize() > 0) // backspace
+				{
+					m_userInput.erase(m_userInput.getSize() - 1, 1);
+					
+					try
+					{
+						m_block.mass = std::stoi(std::string(m_userInput), nullptr);
+					}
+					catch (...)
+					{
+						m_block.mass = 0;
+					}
+				}
+				
+				m_blockMassText.setString(m_userInput);			
+				break;
+		}
+	}
+}
+
+void CCrane::refresh()
+{
+	m_window.clear(sf::Color::White);
+	
+	for (int i = 0; i < m_keySprites.size(); i++)
+	{
+		m_window.draw(m_keySprites[i]);
+	}	
+	
+	m_window.draw(m_craneSprite);
+	m_window.draw(m_hookControlSprite);
+	m_window.draw(m_hookSprite);
+	m_window.draw(m_hookRope);
+	m_window.draw(m_block.shape);
+	m_window.draw(m_blockMassLabel);
+	m_window.draw(m_blockMassText);
+	m_window.draw(m_craneCapacityExceeded);
+	m_window.draw(m_blockMassBorder);
+	
+	m_window.display();
+}
+
+void CCrane::update()
+{
+	for (int i = 0; i < m_keySprites.size(); i++) // wylaczenie przezroczystosci przyciskow
+	{
+		if (m_keySprites[i].getColor().a == m_highlightAlpha)
+		{
+			m_keySprites[i].setColor(sf::Color::White);
+		}
+	}
+	
+	// interakcja z uzytkownikiem
+	int deltaX = 0;
+	int deltaY = 0;
+	processMovement(deltaX, deltaY);
+	
+	sf::FloatRect hookRect = m_hookSprite.getGlobalBounds();
+	handleSuspension(hookRect);
+	hookRect.left += deltaX;
+	hookRect.top += deltaY;
+	
+	sf::FloatRect ropeRect = m_hookRope.getGlobalBounds();	
+	ropeRect.left += deltaX;
+	ropeRect.top += deltaY;
+		
+	// poruszanie elementami dzwigu	
+	handleMovement(deltaX, deltaY, hookRect, ropeRect);
+	
+	// kontrola udzwigu
+	if (m_block.mass > m_craneCapacity)
+	{
+		m_craneCapacityExceeded.setFillColor(sf::Color::Red);
+		m_block.isSuspended = false;
+	}
+	else
+	{
+		m_craneCapacityExceeded.setFillColor(sf::Color::White);
+	}
+		
+	// spadanie bloczka
+	if (!m_block.isSuspended)
+	{
+		if ((m_block.shape.getPosition().y + m_block.shape.getSize().y + m_block.velocity) < m_groundLevel)
+		{
+			m_block.velocity += m_block.acceleration / 120.0;
+			m_block.shape.move(0, m_block.velocity);
+		}	
+		else
+		{
+			m_block.shape.move(0, m_groundLevel - (m_block.shape.getPosition().y + m_block.shape.getSize().y));
+			m_block.velocity = 0;
+		}	
+	}
+}
+
+void CCrane::processMovement(int& deltaX, int& deltaY)
+{
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+	{
+		if (m_hookControlSprite.getPosition().x > m_craneSprite.getPosition().x + 10)
+		{			
+			deltaX -= 1;
+		}
+		
+		m_keySprites[Key::LEFT].setColor(sf::Color(255, 255, 255, m_highlightAlpha));		
+	}
+	
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+	{
+		if (m_hookControlSprite.getPosition().x < m_craneSprite.getPosition().x + 350)
+		{			
+			deltaX += 1;
+		}
+		
+		m_keySprites[Key::RIGHT].setColor(sf::Color(255, 255, 255, m_highlightAlpha));
+	}
+	
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+	{
+		if (m_hookSprite.getPosition().y > m_hookControlSprite.getPosition().y + m_hookControlTexture.getSize().y)
+		{			
+			deltaY -= 1;
+		}
+		
+		m_keySprites[Key::UP].setColor(sf::Color(255, 255, 255, m_highlightAlpha));
+	}
+	
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+	{
+		if ((!m_block.isSuspended && m_hookSprite.getPosition().y < m_groundLevel) || (m_block.isSuspended && (m_block.shape.getPosition().y + m_block.shape.getSize().y) < m_groundLevel))
+		{		
+			deltaY += 1;
+		}
+		
+		m_keySprites[Key::DOWN].setColor(sf::Color(255, 255, 255, m_highlightAlpha));
+	}
+}
+
+void CCrane::handleMovement(const int deltaX, const int deltaY, const sf::FloatRect& hookRect, const sf::FloatRect& ropeRect)
+{
+	if (deltaX != 0 && (!(m_block.collidesWith(hookRect) || m_block.collidesWith(ropeRect)) || m_block.isSuspended))
+	{
+		m_hookControlSprite.move(deltaX, 0);
+		m_hookSprite.move(deltaX, 0);
+		m_hookRope.move(deltaX, 0);
+		
+		if (m_block.isSuspended)
+		{
+			m_block.shape.move(deltaX, 0);
+		}
+	}
+	
+	if (deltaY != 0 && (!m_block.collidesWith(ropeRect) || m_block.isSuspended))
+	{
+		m_hookSprite.move(0, deltaY);
+		m_hookRope.setSize(sf::Vector2f(2.0, m_hookSprite.getPosition().y - m_hookControlSprite.getPosition().y - m_hookControlTexture.getSize().y));
+		
+		if (m_block.isSuspended)
+		{
+			m_block.shape.move(0, deltaY);
+		}
+	}
+}
+
+void CCrane::handleSuspension(sf::FloatRect& hookRect)
+{
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+	{	
+		while (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)); // wykrycie spacji jednorazowo
+		
+		if (m_block.isSuspended)
+		{
+			m_block.isSuspended = false;
+		}
+		else if (m_block.collidesWith(hookRect))
+		{
+			m_block.isSuspended = true;
+		}
+		
+		m_keySprites[Key::SPACE].setColor(sf::Color(255, 255, 255, m_highlightAlpha));
+	}
 }

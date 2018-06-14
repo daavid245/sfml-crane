@@ -22,8 +22,7 @@ struct Block
 	double acceleration;
 	double velocity;
 	bool isSuspended;
-	
-	
+		
 	bool collidesWith(const sf::FloatRect& entity)
 	{
 		sf::FloatRect rect = shape.getGlobalBounds();
@@ -45,7 +44,9 @@ class CCrane
 		const std::string IMGPATH_HOOKCONTROL;
 		const std::string IMGPATH_HOOK;
 		const std::string IMGPATH_KEYS;
+		const std::string FONTPATH_DEFAULT;
 		unsigned m_highlightAlpha;
+		unsigned m_craneCapacity;
 
 		sf::RenderWindow m_window;
 		
@@ -65,11 +66,21 @@ class CCrane
 		sf::RectangleShape m_hookRope;
 		Block m_block;
 		
+		sf::Font m_font;
+		sf::String m_userInput;
+		sf::Text m_blockMassLabel;	
+		sf::Text m_blockMassText;	
+		sf::Text m_craneCapacityExceeded;
+		sf::RectangleShape m_blockMassBorder;		
+		
+		bool loadAssets();
+		void setup();
 		void processEvents();
 		void refresh();	
-		void update();
-		bool loadSprites();
-		void setupSprites();
+		void update();		
+		void processMovement(int& deltaX, int& deltaY);
+		void handleMovement(const int deltaX, const int deltaY, const sf::FloatRect& hookRect, const sf::FloatRect& ropeRect);
+		void handleSuspension(sf::FloatRect& hookRect);					
 };
 
 #endif // CRANE_HPP

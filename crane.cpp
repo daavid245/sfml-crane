@@ -2,12 +2,13 @@
 
 CCrane::CCrane(const unsigned width, const unsigned height, const std::string title)
 : IMGPATH_CRANE("assets/crane.png"), IMGPATH_HOOKCONTROL("assets/hookcontrol.png"), IMGPATH_HOOK("assets/hook.png"), 
-  IMGPATH_KEYS("assets/arrows.png")
+  IMGPATH_KEYS("assets/arrows.png"), FONTPATH_DEFAULT("assets/arial.ttf")
 {
 	m_width = width;
 	m_height = height;
 	m_groundLevel = m_height - 10;
 	m_highlightAlpha = 150;
+	m_craneCapacity = 500;
 	
 	sf::ContextSettings settings;
 	settings.antialiasingLevel = 8;
@@ -15,13 +16,13 @@ CCrane::CCrane(const unsigned width, const unsigned height, const std::string ti
 	m_window.create(sf::VideoMode(m_width, m_height), title, sf::Style::Close, settings);
 	m_window.setFramerateLimit(120);
 	
-	if (!loadSprites())
+	if (!loadAssets())
 	{
-		std::cout << "Nie mozna wczytac obrazow\n";
+		std::cout << "Nie mozna wczytac wymaganych plikow\n";
 		m_window.close();
 	}	
 	
-	setupSprites();
+	setup();	
 }
 
 void CCrane::run()
@@ -34,6 +35,78 @@ void CCrane::run()
 	}
 }
 
+bool CCrane::loadAssets()
+{
+	return (m_craneTexture.loadFromFile(IMGPATH_CRANE) && m_hookControlTexture.loadFromFile(IMGPATH_HOOKCONTROL) && m_hookTexture.loadFromFile(IMGPATH_HOOK)
+		&& m_keysTexture.loadFromFile(IMGPATH_KEYS) && m_font.loadFromFile(FONTPATH_DEFAULT));
+}
+
+void CCrane::setup()
+{
+	m_craneSprite.setPosition(m_width - m_craneTexture.getSize().x - 50, m_groundLevel - m_craneTexture.getSize().y);
+	m_craneSprite.setTexture(m_craneTexture);
+	
+	m_hookControlSprite.setPosition(m_craneSprite.getPosition().x + 10, m_craneSprite.getPosition().y + 147);
+	m_hookControlSprite.setTexture(m_hookControlTexture);
+	
+	m_hookSprite.setPosition(m_hookControlSprite.getPosition().x + 10, m_craneSprite.getPosition().y + 177);
+	m_hookSprite.setTexture(m_hookTexture);
+	
+	m_hookRope.setPosition(m_hookControlSprite.getPosition().x + m_hookControlTexture.getSize().x/2 - 1, m_hookControlSprite.getPosition().y + m_hookControlTexture.getSize().y);
+	m_hookRope.setFillColor(sf::Color::Black);
+	
+	for (int i = 0; i < 5; i++)
+	{
+		sf::Sprite sprite;
+		sprite.setTexture(m_keysTexture);
+		
+		if (i == 4)
+		{
+			sprite.setTextureRect(sf::IntRect(248, 0, 332, 62));
+		}
+		else
+		{
+			sprite.setTextureRect(sf::IntRect(i*62, 0, 62, 62));
+		}
+
+		m_keySprites.push_back(sprite);
+	}
+	
+	m_keySprites[Key::LEFT].setPosition(10, m_height - 72);
+	m_keySprites[Key::UP].setPosition(77, m_height - 139);
+	m_keySprites[Key::RIGHT].setPosition(144, m_height - 72);
+	m_keySprites[Key::DOWN].setPosition(77, m_height - 72);
+	m_keySprites[Key::SPACE].setPosition(221, m_height - 72);
+	
+	m_block.shape.setSize(sf::Vector2f(50,50));
+	m_block.shape.setPosition(700, m_groundLevel - m_block.shape.getSize().y);
+	m_block.shape.setFillColor(sf::Color::Black);
+	m_block.mass = 0.0;
+	m_block.acceleration = 9.81;
+	m_block.velocity = 0;
+	m_block.isSuspended = false;
+	
+	m_blockMassLabel.setFont(m_font);
+	m_blockMassLabel.setFillColor(sf::Color::Black);
+	m_blockMassLabel.setPosition(sf::Vector2f(10, 10));
+	m_blockMassLabel.setString("Waga bloczka (wpisz z klawiatury)");
+	
+	m_blockMassText.setFont(m_font);
+	m_blockMassText.setFillColor(sf::Color::Black);
+	m_blockMassText.setPosition(sf::Vector2f(16, 51));
+	
+	m_craneCapacityExceeded.setFont(m_font);
+	m_craneCapacityExceeded.setCharacterSize(22);
+	m_craneCapacityExceeded.setPosition(sf::Vector2f(10, 541));
+	m_craneCapacityExceeded.setString("Uwaga! Blok przekracza dopuszczalna mase udzwigu (500).");
+	
+	m_blockMassBorder.setFillColor(sf::Color(255, 255, 255, 0));
+	m_blockMassBorder.setOutlineThickness(2);
+	m_blockMassBorder.setOutlineColor(sf::Color::Black);
+	m_blockMassBorder.setSize(sf::Vector2f(250, 40));
+	m_blockMassBorder.setPosition(sf::Vector2f(15, 50));
+}
+
 void CCrane::processEvents()
 {
 	sf::Event event;
@@ -43,6 +116,32 @@ void CCrane::processEvents()
 		{
 			case sf::Event::Closed:
 				m_window.close();
+				break;
+				
+			case sf::Event::TextEntered:
+				if (event.text.unicode >= 48 && event.text.unicode <= 57 && m_userInput.getSize() < 6) // cyfry od 0 do 9
+				{
+					if ((event.text.unicode == 48 && m_userInput.getSize() > 0) || event.text.unicode != 48)
+					{
+						m_userInput += event.text.unicode;					
+						m_block.mass = std::stoi(std::string(m_userInput), nullptr);
+					}				
+				}
+				else if (event.text.unicode == 8 && m_userInput.getSize() > 0) // backspace
+				{
+					m_userInput.erase(m_userInput.getSize() - 1, 1);
+					
+					try
+					{
+						m_block.mass = std::stoi(std::string(m_userInput), nullptr);
+					}
+					catch (...)
+					{
+						m_block.mass = 0;
+					}
+				}
+				
+				m_blockMassText.setString(m_userInput);			
 				break;
 		}
 	}
@@ -62,13 +161,17 @@ void CCrane::refresh()
 	m_window.draw(m_hookSprite);
 	m_window.draw(m_hookRope);
 	m_window.draw(m_block.shape);
+	m_window.draw(m_blockMassLabel);
+	m_window.draw(m_blockMassText);
+	m_window.draw(m_craneCapacityExceeded);
+	m_window.draw(m_blockMassBorder);
 	
 	m_window.display();
 }
 
 void CCrane::update()
 {
-	for (int i = 0; i < m_keySprites.size(); i++)
+	for (int i = 0; i < m_keySprites.size(); i++) // wylaczenie przezroczystosci przyciskow
 	{
 		if (m_keySprites[i].getColor().a == m_highlightAlpha)
 		{
@@ -76,9 +179,52 @@ void CCrane::update()
 		}
 	}
 	
+	// interakcja z uzytkownikiem
 	int deltaX = 0;
 	int deltaY = 0;
+	processMovement(deltaX, deltaY);
 	
+	sf::FloatRect hookRect = m_hookSprite.getGlobalBounds();
+	handleSuspension(hookRect);
+	hookRect.left += deltaX;
+	hookRect.top += deltaY;
+	
+	sf::FloatRect ropeRect = m_hookRope.getGlobalBounds();	
+	ropeRect.left += deltaX;
+	ropeRect.top += deltaY;
+		
+	// poruszanie elementami dzwigu	
+	handleMovement(deltaX, deltaY, hookRect, ropeRect);
+	
+	// kontrola udzwigu
+	if (m_block.mass > m_craneCapacity)
+	{
+		m_craneCapacityExceeded.setFillColor(sf::Color::Red);
+		m_block.isSuspended = false;
+	}
+	else
+	{
+		m_craneCapacityExceeded.setFillColor(sf::Color::White);
+	}
+		
+	// spadanie bloczka
+	if (!m_block.isSuspended)
+	{
+		if ((m_block.shape.getPosition().y + m_block.shape.getSize().y + m_block.velocity) < m_groundLevel)
+		{
+			m_block.velocity += m_block.acceleration / 120.0;
+			m_block.shape.move(0, m_block.velocity);
+		}	
+		else
+		{
+			m_block.shape.move(0, m_groundLevel - (m_block.shape.getPosition().y + m_block.shape.getSize().y));
+			m_block.velocity = 0;
+		}	
+	}
+}
+
+void CCrane::processMovement(int& deltaX, int& deltaY)
+{
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
 	{
 		if (m_hookControlSprite.getPosition().x > m_craneSprite.getPosition().x + 10)
@@ -118,31 +264,10 @@ void CCrane::update()
 		
 		m_keySprites[Key::DOWN].setColor(sf::Color(255, 255, 255, m_highlightAlpha));
 	}
+}
 
-	sf::FloatRect ropeRect = m_hookRope.getGlobalBounds();
-	sf::FloatRect hookRect = m_hookSprite.getGlobalBounds();
-	ropeRect.left += deltaX;
-	ropeRect.top += deltaY;
-	
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
-	{	
-		while (sf::Keyboard::isKeyPressed(sf::Keyboard::Space));
-		
-		if (m_block.isSuspended)
-		{
-			m_block.isSuspended = false;
-		}
-		else if (m_block.collidesWith(hookRect))
-		{
-			m_block.isSuspended = true;
-		}
-		
-		m_keySprites[Key::SPACE].setColor(sf::Color(255, 255, 255, m_highlightAlpha));
-	}
-	
-	hookRect.left += deltaX;
-	hookRect.top += deltaY;
-	
+void CCrane::handleMovement(const int deltaX, const int deltaY, const sf::FloatRect& hookRect, const sf::FloatRect& ropeRect)
+{
 	if (deltaX != 0 && (!(m_block.collidesWith(hookRect) || m_block.collidesWith(ropeRect)) || m_block.isSuspended))
 	{
 		m_hookControlSprite.move(deltaX, 0);
@@ -165,65 +290,23 @@ void CCrane::update()
 			m_block.shape.move(0, deltaY);
 		}
 	}
-	
-	if(!m_block.isSuspended && (m_block.shape.getPosition().y + m_block.shape.getSize().y + m_block.velocity) < m_groundLevel)
-	{
-		m_block.velocity += m_block.acceleration/120.0;
-		m_block.shape.move(0, m_block.velocity);		
-	}
-	else
-	{
-		m_block.velocity = 0;
-	}
 }
 
-bool CCrane::loadSprites()
+void CCrane::handleSuspension(sf::FloatRect& hookRect)
 {
-	return (m_craneTexture.loadFromFile(IMGPATH_CRANE) && m_hookControlTexture.loadFromFile(IMGPATH_HOOKCONTROL) && m_hookTexture.loadFromFile(IMGPATH_HOOK)
-		&& m_keysTexture.loadFromFile(IMGPATH_KEYS));
-}
-
-void CCrane::setupSprites()
-{
-	m_craneSprite.setPosition(m_width - m_craneTexture.getSize().x - 50, m_groundLevel - m_craneTexture.getSize().y);
-	m_craneSprite.setTexture(m_craneTexture);
-	
-	m_hookControlSprite.setPosition(m_craneSprite.getPosition().x + 10, m_craneSprite.getPosition().y + 147);
-	m_hookControlSprite.setTexture(m_hookControlTexture);
-	
-	m_hookSprite.setPosition(m_hookControlSprite.getPosition().x + 10, m_craneSprite.getPosition().y + 177);
-	m_hookSprite.setTexture(m_hookTexture);
-	
-	m_hookRope.setPosition(m_hookControlSprite.getPosition().x + m_hookControlTexture.getSize().x/2 - 1, m_hookControlSprite.getPosition().y + m_hookControlTexture.getSize().y);
-	m_hookRope.setFillColor(sf::Color::Black);
-	
-	for (int i = 0; i < 5; i++)
-	{
-		sf::Sprite sprite;
-		sprite.setTexture(m_keysTexture);
-		if(i == 4)
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+	{	
+		while (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)); // wykrycie spacji jednorazowo
+		
+		if (m_block.isSuspended)
 		{
-			sprite.setTextureRect(sf::IntRect(248, 0, 332, 62));
+			m_block.isSuspended = false;
 		}
-		else
+		else if (m_block.collidesWith(hookRect))
 		{
-			sprite.setTextureRect(sf::IntRect(i*62, 0, 62, 62));
+			m_block.isSuspended = true;
 		}
-
-		m_keySprites.push_back(sprite);
+		
+		m_keySprites[Key::SPACE].setColor(sf::Color(255, 255, 255, m_highlightAlpha));
 	}
-	
-	m_keySprites[Key::LEFT].setPosition(10, m_height - 72);
-	m_keySprites[Key::UP].setPosition(77, m_height - 139);
-	m_keySprites[Key::RIGHT].setPosition(144, m_height - 72);
-	m_keySprites[Key::DOWN].setPosition(77, m_height - 72);
-	m_keySprites[Key::SPACE].setPosition(221, m_height - 72);
-	
-	m_block.shape.setSize(sf::Vector2f(50,50));
-	m_block.shape.setPosition(700, m_groundLevel - m_block.shape.getSize().y);
-	m_block.shape.setFillColor(sf::Color::Black);
-	m_block.mass = 50.0;
-	m_block.acceleration = 9.81;
-	m_block.velocity = 0;
-	m_block.isSuspended = false;
 }

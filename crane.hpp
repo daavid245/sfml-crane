@@ -45,7 +45,9 @@ class CCrane
 		const std::string IMGPATH_HOOKCONTROL;
 		const std::string IMGPATH_HOOK;
 		const std::string IMGPATH_KEYS;
+		const std::string FONTPATH_DEFAULT;
 		unsigned m_highlightAlpha;
+		unsigned m_craneCapacity;
 
 		sf::RenderWindow m_window;
 		
@@ -65,11 +67,18 @@ class CCrane
 		sf::RectangleShape m_hookRope;
 		Block m_block;
 		
+		sf::Font m_font;
+		sf::String m_userInput;
+		sf::Text m_craneCapacityLabel;	
+		sf::Text m_craneCapacityText;	
+		sf::Text m_craneCapacityExceeded;
+		sf::RectangleShape m_craneCapacityBorder;		
+		
 		void processEvents();
 		void refresh();	
 		void update();
-		bool loadSprites();
-		void setupSprites();
+		bool loadAssets();
+		void setup();	
 };
 
 #endif // CRANE_HPP

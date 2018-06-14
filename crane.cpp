@@ -2,12 +2,13 @@
 
 CCrane::CCrane(const unsigned width, const unsigned height, const std::string title)
 : IMGPATH_CRANE("assets/crane.png"), IMGPATH_HOOKCONTROL("assets/hookcontrol.png"), IMGPATH_HOOK("assets/hook.png"), 
-  IMGPATH_KEYS("assets/arrows.png")
+  IMGPATH_KEYS("assets/arrows.png"), FONTPATH_DEFAULT("assets/arial.ttf")
 {
 	m_width = width;
 	m_height = height;
 	m_groundLevel = m_height - 10;
 	m_highlightAlpha = 150;
+	m_craneCapacity = 0;
 	
 	sf::ContextSettings settings;
 	settings.antialiasingLevel = 8;
@@ -15,13 +16,13 @@ CCrane::CCrane(const unsigned width, const unsigned height, const std::string ti
 	m_window.create(sf::VideoMode(m_width, m_height), title, sf::Style::Close, settings);
 	m_window.setFramerateLimit(120);
 	
-	if (!loadSprites())
+	if (!loadAssets())
 	{
-		std::cout << "Nie mozna wczytac obrazow\n";
+		std::cout << "Nie mozna wczytac wymaganych plikow\n";
 		m_window.close();
 	}	
 	
-	setupSprites();
+	setup();	
 }
 
 void CCrane::run()
@@ -44,6 +45,32 @@ void CCrane::processEvents()
 			case sf::Event::Closed:
 				m_window.close();
 				break;
+				
+			case sf::Event::TextEntered:
+				if (event.text.unicode >= 48 && event.text.unicode <= 57 && m_userInput.getSize() < 6) // cyfry od 0 do 9
+				{
+					if ((event.text.unicode == 48 && m_userInput.getSize() > 0) || event.text.unicode != 48)
+					{
+						m_userInput += event.text.unicode;					
+						m_craneCapacity = std::stoi(std::string(m_userInput), nullptr);
+					}				
+				}
+				else if (event.text.unicode == 8 && m_userInput.getSize() > 0) // backspace
+				{
+					m_userInput.erase(m_userInput.getSize() - 1, 1);
+					
+					try
+					{
+						m_craneCapacity = std::stoi(std::string(m_userInput), nullptr);
+					}
+					catch (...)
+					{
+						m_craneCapacity = 0;
+					}
+				}
+				
+				m_craneCapacityText.setString(m_userInput);			
+				break;
 		}
 	}
 }
@@ -62,13 +89,17 @@ void CCrane::refresh()
 	m_window.draw(m_hookSprite);
 	m_window.draw(m_hookRope);
 	m_window.draw(m_block.shape);
+	m_window.draw(m_craneCapacityLabel);
+	m_window.draw(m_craneCapacityText);
+	m_window.draw(m_craneCapacityExceeded);
+	m_window.draw(m_craneCapacityBorder);
 	
 	m_window.display();
 }
 
 void CCrane::update()
 {
-	for (int i = 0; i < m_keySprites.size(); i++)
+	for (int i = 0; i < m_keySprites.size(); i++) // wylaczenie przezroczystosci przyciskow
 	{
 		if (m_keySprites[i].getColor().a == m_highlightAlpha)
 		{
@@ -126,7 +157,7 @@ void CCrane::update()
 	
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
 	{	
-		while (sf::Keyboard::isKeyPressed(sf::Keyboard::Space));
+		while (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)); // wykrycie spacji jednorazowo
 		
 		if (m_block.isSuspended)
 		{
@@ -138,6 +169,16 @@ void CCrane::update()
 		}
 		
 		m_keySprites[Key::SPACE].setColor(sf::Color(255, 255, 255, m_highlightAlpha));
+	}
+	
+	if (m_block.mass > m_craneCapacity)
+	{
+		m_craneCapacityExceeded.setFillColor(sf::Color::Red);
+		m_block.isSuspended = false;
+	}
+	else
+	{
+		m_craneCapacityExceeded.setFillColor(sf::Color::White);
 	}
 	
 	hookRect.left += deltaX;
@@ -166,7 +207,7 @@ void CCrane::update()
 		}
 	}
 	
-	if(!m_block.isSuspended && (m_block.shape.getPosition().y + m_block.shape.getSize().y + m_block.velocity) < m_groundLevel)
+	if (!m_block.isSuspended && (m_block.shape.getPosition().y + m_block.shape.getSize().y + m_block.velocity) < m_groundLevel)
 	{
 		m_block.velocity += m_block.acceleration/120.0;
 		m_block.shape.move(0, m_block.velocity);		
@@ -177,13 +218,13 @@ void CCrane::update()
 	}
 }
 
-bool CCrane::loadSprites()
+bool CCrane::loadAssets()
 {
 	return (m_craneTexture.loadFromFile(IMGPATH_CRANE) && m_hookControlTexture.loadFromFile(IMGPATH_HOOKCONTROL) && m_hookTexture.loadFromFile(IMGPATH_HOOK)
-		&& m_keysTexture.loadFromFile(IMGPATH_KEYS));
+		&& m_keysTexture.loadFromFile(IMGPATH_KEYS) && m_font.loadFromFile(FONTPATH_DEFAULT));
 }
 
-void CCrane::setupSprites()
+void CCrane::setup()
 {
 	m_craneSprite.setPosition(m_width - m_craneTexture.getSize().x - 50, m_groundLevel - m_craneTexture.getSize().y);
 	m_craneSprite.setTexture(m_craneTexture);
@@ -201,7 +242,8 @@ void CCrane::setupSprites()
 	{
 		sf::Sprite sprite;
 		sprite.setTexture(m_keysTexture);
-		if(i == 4)
+		
+		if (i == 4)
 		{
 			sprite.setTextureRect(sf::IntRect(248, 0, 332, 62));
 		}
@@ -226,4 +268,24 @@ void CCrane::setupSprites()
 	m_block.acceleration = 9.81;
 	m_block.velocity = 0;
 	m_block.isSuspended = false;
+	
+	m_craneCapacityLabel.setFont(m_font);
+	m_craneCapacityLabel.setFillColor(sf::Color::Black);
+	m_craneCapacityLabel.setPosition(sf::Vector2f(10, 10));
+	m_craneCapacityLabel.setString("Udzwig (wpisz z klawiatury)");
+	
+	m_craneCapacityText.setFont(m_font);
+	m_craneCapacityText.setFillColor(sf::Color::Black);
+	m_craneCapacityText.setPosition(sf::Vector2f(16, 51));
+	
+	m_craneCapacityExceeded.setFont(m_font);
+	m_craneCapacityExceeded.setCharacterSize(22);
+	m_craneCapacityExceeded.setPosition(sf::Vector2f(10, 541));
+	m_craneCapacityExceeded.setString("Uwaga! Blok przekracza dopuszczalna mase udzwigu.");
+	
+	m_craneCapacityBorder.setFillColor(sf::Color(255, 255, 255, 0));
+	m_craneCapacityBorder.setOutlineThickness(2);
+	m_craneCapacityBorder.setOutlineColor(sf::Color::Black);
+	m_craneCapacityBorder.setSize(sf::Vector2f(250, 40));
+	m_craneCapacityBorder.setPosition(sf::Vector2f(15, 50));
 }

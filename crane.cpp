@@ -8,7 +8,7 @@ CCrane::CCrane(const unsigned width, const unsigned height, const std::string ti
 	m_height = height;
 	m_groundLevel = m_height - 10;
 	m_highlightAlpha = 150;
-	m_craneCapacity = 0;
+	m_craneCapacity = 500;
 	
 	sf::ContextSettings settings;
 	settings.antialiasingLevel = 8;
@@ -52,7 +52,7 @@ void CCrane::processEvents()
 					if ((event.text.unicode == 48 && m_userInput.getSize() > 0) || event.text.unicode != 48)
 					{
 						m_userInput += event.text.unicode;					
-						m_craneCapacity = std::stoi(std::string(m_userInput), nullptr);
+						m_block.mass = std::stoi(std::string(m_userInput), nullptr);
 					}				
 				}
 				else if (event.text.unicode == 8 && m_userInput.getSize() > 0) // backspace
@@ -61,11 +61,11 @@ void CCrane::processEvents()
 					
 					try
 					{
-						m_craneCapacity = std::stoi(std::string(m_userInput), nullptr);
+						m_block.mass = std::stoi(std::string(m_userInput), nullptr);
 					}
 					catch (...)
 					{
-						m_craneCapacity = 0;
+						m_block.mass = 0;
 					}
 				}
 				
@@ -264,7 +264,7 @@ void CCrane::setup()
 	m_block.shape.setSize(sf::Vector2f(50,50));
 	m_block.shape.setPosition(700, m_groundLevel - m_block.shape.getSize().y);
 	m_block.shape.setFillColor(sf::Color::Black);
-	m_block.mass = 50.0;
+	m_block.mass = 0.0;
 	m_block.acceleration = 9.81;
 	m_block.velocity = 0;
 	m_block.isSuspended = false;
@@ -272,7 +272,7 @@ void CCrane::setup()
 	m_craneCapacityLabel.setFont(m_font);
 	m_craneCapacityLabel.setFillColor(sf::Color::Black);
 	m_craneCapacityLabel.setPosition(sf::Vector2f(10, 10));
-	m_craneCapacityLabel.setString("Udzwig (wpisz z klawiatury)");
+	m_craneCapacityLabel.setString("Waga bloczka (wpisz z klawiatury)");
 	
 	m_craneCapacityText.setFont(m_font);
 	m_craneCapacityText.setFillColor(sf::Color::Black);
@@ -281,7 +281,7 @@ void CCrane::setup()
 	m_craneCapacityExceeded.setFont(m_font);
 	m_craneCapacityExceeded.setCharacterSize(22);
 	m_craneCapacityExceeded.setPosition(sf::Vector2f(10, 541));
-	m_craneCapacityExceeded.setString("Uwaga! Blok przekracza dopuszczalna mase udzwigu.");
+	m_craneCapacityExceeded.setString("Uwaga! Blok przekracza dopuszczalna mase udzwigu (500).");
 	
 	m_craneCapacityBorder.setFillColor(sf::Color(255, 255, 255, 0));
 	m_craneCapacityBorder.setOutlineThickness(2);

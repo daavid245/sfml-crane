@@ -7,13 +7,10 @@ CCrane::CCrane(const unsigned width, const unsigned height, const std::string ti
 	m_width = width;
 	m_height = height;
 	m_groundLevel = m_height - 10;
-	m_highlightAlpha = 150;
+	m_highlightAlpha = 150; // wartosc przezroczystosci 0 - 255
 	m_craneCapacity = 500;
 	
-	sf::ContextSettings settings;
-	settings.antialiasingLevel = 8;
-	
-	m_window.create(sf::VideoMode(m_width, m_height), title, sf::Style::Close, settings);
+	m_window.create(sf::VideoMode(m_width, m_height), title, sf::Style::Close);
 	m_window.setFramerateLimit(120);
 	
 	if (!loadAssets())
@@ -179,13 +176,12 @@ void CCrane::update()
 		}
 	}
 	
-	// interakcja z uzytkownikiem
 	int deltaX = 0;
 	int deltaY = 0;
-	processMovement(deltaX, deltaY);
+	processMovement(deltaX, deltaY); // interakcja z uzytkownikiem
 	
 	sf::FloatRect hookRect = m_hookSprite.getGlobalBounds();
-	handleSuspension(hookRect);
+	handleSuspension(hookRect); // zaczepianie/odczepianie bloczka
 	hookRect.left += deltaX;
 	hookRect.top += deltaY;
 	

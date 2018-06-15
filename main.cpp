@@ -1,4 +1,3 @@
-#include <iostream>
 #include "crane.hpp"
 
 int main(int argc, char** argv)

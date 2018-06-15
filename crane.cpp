@@ -214,7 +214,7 @@ void CCrane::update()
 		else
 		{
 			m_block.shape.move(0, m_groundLevel - (m_block.shape.getPosition().y + m_block.shape.getSize().y));
-			m_block.velocity = 0;
+			m_block.velocity /= -2;
 		}	
 	}
 }
